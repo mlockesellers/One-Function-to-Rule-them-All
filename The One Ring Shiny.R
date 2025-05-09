@@ -10,8 +10,7 @@ library(ggpp)
 library(patchwork)
 library(stringr)
 library(stats)
-#Use the line below to set your working directory to a folder that has both the Shiny Application and the "One Function to Rule Them All.R" 
-#setwd("~/Documents/The One Ring Code")
+setwd("~/Documents/The One Ring Code")
 
 #Source function
 source("One Function to Rule Them All.R")

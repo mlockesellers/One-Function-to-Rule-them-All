@@ -12,7 +12,7 @@ library(stringr)
 
 
 #Set Working Directory
-#Choose the working directory that you need
+
 #setwd("~/Documents/The One Ring Code")
 
 #Set up the function
@@ -178,3 +178,5 @@ LEH_list <- arrange(LEH_list,Site,Individual,Tooth_Name)
   #Save the output as a csv
   write.csv(Stress_Events, paste(Sys.Date(),"LEH Event Age Data.csv"))
 }
+
+

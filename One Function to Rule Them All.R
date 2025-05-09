@@ -13,7 +13,7 @@ library(stringr)
 
 #Set Working Directory
 
-setwd("~/Documents/The One Ring Code")
+#setwd("~/Documents/The One Ring Code")
 
 #Set up the function
 #Make sure the .csv has the same name as your document
@@ -179,5 +179,4 @@ LEH_list <- arrange(LEH_list,Site,Individual,Tooth_Name)
   write.csv(Stress_Events, paste(Sys.Date(),"LEH Event Age Data.csv"))
 }
 
-LEH.fun("TheOneRing 2.csv","Ohio_M")
 

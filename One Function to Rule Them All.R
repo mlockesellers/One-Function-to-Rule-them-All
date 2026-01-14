@@ -1,4 +1,7 @@
-#Last updated by MLS 4.24.24
+#Updated by MLS 4.24.24
+##review comments 24 oct 2025
+##Updated by MLS 12.16.25
+##Last updated by MLS 1.5.26
 
 #Load in necessary libraries
 library(car)
@@ -11,29 +14,6 @@ library(patchwork)
 library(stringr)
 
 
-#Set Working Directory
-
-#setwd("~/Documents/The One Ring Code")
-
-#Set up the function
-#Make sure the .csv has the same name as your document
-#CpFT_ref input options are "Ohio_R","Ohio_M",Southern_Africa_R", or "Northern_Europe_R" written exactly like that
-
-i=1
-LEH.fun <- function(csv_file_name,CpFT_ref) {
-  #Part 1: Data Setup and LOWESS Curve Production
-  
-  #Read the specific data into the function: Make sure you have the exact file
-  #name to avoid errors
-  data = read.csv(csv_file_name) 
-  
-  #Split the Data by Tooth
-  dat_list <- split(data, data$Tooth)
-  
-  #Creating a date-specific pdf- you can edit the pdf name here
-  pdf(file = paste(Sys.Date(),"LEH Data.pdf"))
-  par(mfrow = c(1,1))
-  
   #Identifying outlier values
   f <- function(x){
     r <- quantile(x, probs = c(0.1, 0.25, 0.5, 0.75, 0.9), na.rm = TRUE)
@@ -45,10 +25,76 @@ LEH.fun <- function(csv_file_name,CpFT_ref) {
     outlier <- subset(x, x < quantile(x,0.1, na.rm = TRUE) | quantile(x,0.9, na.rm = TRUE) < x)
     print(outlier)
   }
+  findoutlier <- function(x){
+    return(x < quantile(x,0.1, na.rm = TRUE) | quantile(x,0.9, na.rm = TRUE) < x)
+  }
+
+#Establishing CpFT values
+  #Current values available for function include: Ohio_M, Ohio_R, South_Africa_R, or Northern_Europe_R
+  
+  #Ohio values from Blatt 2013, Southern Africa and Northern Europe from Reid and Dean 2006
+  tooth <- c("MaxI1","MaxI2","MaxC","MandI1","MandI2","MandC")
+  
+  #Ohio Risnes Correction
+  #These are the times in days of cusp formation listed following the order of the teeth cited in line 35
+  time_OR <- c(99.44,162.91,251.32,129.85,250.69,165.89)
+  #These are the error values corresponding to each cusp formation time (i.e. +/- x days)
+  #The other CpFT_ref values follow the same setup pattern
+  correction_OR <- c(32.9,85.8,78.2,62.8,23.9,78.3)
+  
+  #Ohio Mahoney Correction
+  time_OM <- c(90.79,148.74,229.47,118.56,219.85,151.47)
+  correction_OM <- c(30.1,78.4,71.4,57.3,33.5,71.5)
+  
+  #Southern Africa Risnes Correction
+  time_SNA <- c(284,283,339,214,223,327)
+  correction_SNA <- c(18,19,26,23,20,21)
+  
+  #Northern Europe Risnes Correction
+  time_NNE <- c(289,274,355,256,212,348)
+  correction_NNE <- c(16,16,24,21,21,28)
+  
+  #Constructing the Reference Dataframes
+  #These are the names that should be inputted into the function
+  Ohio_R <- data.frame(tooth, time_OR, correction_OR)
+  colnames(Ohio_R) <- c("Tooth","Time","Correction")
+  Ohio_M <- data.frame(tooth, time_OM, correction_OM)
+  colnames(Ohio_M) <- c("Tooth","Time","Correction")
+  Southern_Africa_R <- data.frame(tooth, time_SNA, correction_SNA)
+  colnames(Southern_Africa_R) <- c("Tooth","Time","Correction")
+  Northern_Europe_R <- data.frame(tooth, time_NNE, correction_NNE)
+  colnames(Northern_Europe_R) <- c("Tooth","Time","Correction")
+
+#Set Working Directory
+  #Make sure to change this to your own working directory
+
+setwd("~/Documents/The One Ring Code.1")
+
+#Set up the function
+#Make sure the .csv has the same name as your document
+#Make sure the headings on your .csv are the same format as those in the .readme
+#CpFT_ref input options are "Ohio_R","Ohio_M",Southern_Africa_R", or "Northern_Europe_R" written exactly like that in quotation marks when you put in the input
+
+LEH.fun <- function(csv_file_name,CpFT_ref){
+  #Part 1: Data Setup and LOWESS Curve Production
+  
+  #Read the specific data into the function: Make sure you have the exact file
+  #name to avoid errors
+  #data = read.csv(csv_file_name) 
+data <- read.csv(csv_file_name)
+data <- as.data.frame(data)
+  
+  #Split the Data by Tooth
+  dat_list <- split(data, data$Tooth)
+  
+  #Creating a date-specific pdf- you can edit the pdf name here
+  pdf(file = paste(Sys.Date(),"LEH Data.pdf"))
+  par(mfrow = c(1,1))
   
   #Create a blank dataframe to save LEH outliers
   LEH_list <- data.frame()
-  
+
+
   #For loop for finding outliers
   for (i in 1:length(dat_list)) {
     thing <- dat_list[[i]]
@@ -80,6 +126,7 @@ LEH.fun <- function(csv_file_name,CpFT_ref) {
   }  
   dev.off()
 
+
   #Part 2: Calculating the age-at-defect values for each event
 
   #Defining tooth categories
@@ -89,36 +136,7 @@ LEH.fun <- function(csv_file_name,CpFT_ref) {
   MandI1 <- c("RMand1","LMand1")
   MandI2 <- c("RMand2","LMand2")
   MandC <- c("RCL","LCL")
-  
-  #Reading in default values
-  #Ohio values from Blatt 2013, Southern Africa and Northern Europe from Reid and Dean 2006
-  tooth <- c("MaxI1","MaxI2","MaxC","MandI1","MandI2","MandC")
-  
-  #Ohio Risnes Correction
-  time_OR <- c(99.44,162.91,251.32,129.85,250.69,165.89)
-  correction_OR <- c(32.9,85.8,78.2,62.8,23.9,78.3)
- 
-   #Ohio Mahoney Correction
-  time_OM <- c(90.79,148.74,229.47,118.56,219.85,151.47)
-  correction_OM <- c(30.1,78.4,71.4,57.3,33.5,71.5)
-  
-  #Southern Africa Risnes Correction
-  time_SNA <- c(284,283,339,214,223,327)
-  correction_SNA <- c(18,19,26,23,20,21)
-  
-  #Northern Europe Risnes Correction
-  time_NNE <- c(289,274,355,256,212,348)
-  correction_NNE <- c(16,16,24,21,21,28)
-  
-  #Constructing the Reference Dataframes
-  Ohio_R <- data.frame(tooth, time_OR, correction_OR)
-  colnames(Ohio_R) <- c("Tooth","Time","Correction")
-  Ohio_M <- data.frame(tooth, time_OM, correction_OM)
-  colnames(Ohio_M) <- c("Tooth","Time","Correction")
-  Southern_Africa_R <- data.frame(tooth, time_SNA, correction_SNA)
-  colnames(Southern_Africa_R) <- c("Tooth","Time","Correction")
-  Northern_Europe_R <- data.frame(tooth, time_NNE, correction_NNE)
-  colnames(Northern_Europe_R) <- c("Tooth","Time","Correction")
+
   
   #Defining CpFT
   if(CpFT_ref=="Ohio_R") {
@@ -134,6 +152,7 @@ LEH.fun <- function(csv_file_name,CpFT_ref) {
     CpFT <- Northern_Europe_R
   }
   
+
   #Split LEH List Individual Name and Specific Tooth
   LEH_list[c('Site','Individual','Tooth')] <- str_split_fixed (LEH_list$Tooth," +",3)
   
